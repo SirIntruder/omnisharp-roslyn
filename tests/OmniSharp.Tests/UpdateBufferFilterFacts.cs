@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -70,7 +71,7 @@ namespace OmniSharp.Tests
             }
         }
 
-        [Fact(Skip = "Fails on line 95 because there are 3 documents, not 2, named 'transient.cs'")]
+        [Fact]
         public async Task UpdateBuffer_TransientDocumentsDisappearWhenProjectAddsThem()
         {
             var testFile = new TestFile("test.cs", "class C {}");
@@ -91,8 +92,11 @@ namespace OmniSharp.Tests
                 var newSolution = host.Workspace.CurrentSolution.AddDocument(document);
                 host.Workspace.TryApplyChanges(newSolution);
 
+                // WorkspaceChanged Event which makes transient events disappear is not raised synchronously
+                Thread.Sleep(100);
+
                 docIds = host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
-                Assert.Equal(2, docIds.Length);
+                Assert.Single(docIds);
 
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "transient.cs", Buffer = "enum E {}" });
                 var sourceText = await host.Workspace.CurrentSolution.GetDocument(docIds.First()).GetTextAsync();

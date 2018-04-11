@@ -322,7 +322,8 @@ namespace OmniSharp.MSBuild
                 _fileSystemWatcher.Watch(Path.GetDirectoryName(sourceFile), OnDirectoryFileChanged);
 
                 // If a document for this source file already exists in the project, carry on.
-                if (currentDocuments.Remove(sourceFile))
+                // If existing document was transient, create a new proper document. Transient document will be removed on WorkspaceChanged event.
+                if (currentDocuments.Remove(sourceFile) && !_workspace.BufferManager.IsTransientDocument(sourceFile))
                 {
                     continue;
                 }

@@ -24,11 +24,11 @@ namespace OmniSharp.Roslyn
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
         }
 
-        public bool IsTransientDocument(string filePath)
+        public bool IsTransientDocument(DocumentId documentId)
         {
             lock(_lock)
             {
-                return _transientDocuments.ContainsKey(filePath);
+                return _transientDocumentIds.Contains(documentId);
             }
         }
 

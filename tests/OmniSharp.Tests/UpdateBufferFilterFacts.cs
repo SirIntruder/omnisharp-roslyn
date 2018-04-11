@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -90,13 +89,9 @@ namespace OmniSharp.Tests
                     filePath: "transient.cs");
 
                 var newSolution = host.Workspace.CurrentSolution.AddDocument(document);
-                host.Workspace.TryApplyChanges(newSolution);
-
-                // WorkspaceChanged Event which makes transient events disappear is not raised synchronously
-                Thread.Sleep(100);
 
                 docIds = host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
-                Assert.Single(docIds);
+                Assert.Equal(2, docIds.Length);
 
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "transient.cs", Buffer = "enum E {}" });
                 var sourceText = await host.Workspace.CurrentSolution.GetDocument(docIds.First()).GetTextAsync();

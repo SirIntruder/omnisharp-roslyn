@@ -187,6 +187,9 @@ Task("InstallDotNetCoreSdk")
             noPath: true);
     }
 
+    // Disable the first time run experience. We don't need to expand all of .NET Core just to build OmniSharp.
+    Environment.SetEnvironmentVariable("DOTNET_SKIP_FIRST_TIME_EXPERIENCE", "true");
+
     Run(env.DotNetCommand, "--info");
 });
 
@@ -400,25 +403,19 @@ Task("PrepareTestAssets:CommonTestAssets")
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        DotNetCoreRestore(new DotNetCoreRestoreSettings()
-        {
-            ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
-        });
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
+            Verbosity = DotNetCoreVerbosity.Minimal
         });
     });
 
-Task("PrepareTestAssets:TestAssetsWithErrors")
+Task("PrepareTestAssets:RestoreOnlyTestAssets")
     .IsDependeeOf("PrepareTestAssets")
-    .DoesForEach(buildPlan.TestAssetsWithErrors, (project) =>
+    .DoesForEach(buildPlan.RestoreOnlyTestAssets, (project) =>
     {
-        Information("Restoring and building: {0}...", project);
+        Information("Restoring: {0}...", project);
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
@@ -426,11 +423,11 @@ Task("PrepareTestAssets:TestAssetsWithErrors")
         {
             ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
+            Verbosity = DotNetCoreVerbosity.Minimal
         });
     });
 
-Task("PrepareTestAssets:WindowsTestAssets")
+Task("PrepareTestAssets:WindowsOnlyTestAssets")
     .WithCriteria(Platform.Current.IsWindows)
     .IsDependeeOf("PrepareTestAssets")
     .DoesForEach(buildPlan.WindowsOnlyTestAssets, (project) =>
@@ -439,17 +436,11 @@ Task("PrepareTestAssets:WindowsTestAssets")
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        DotNetCoreRestore(new DotNetCoreRestoreSettings()
-        {
-            ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
-        });
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
+            Verbosity = DotNetCoreVerbosity.Minimal
         });
     });
 
@@ -473,12 +464,13 @@ Task("PrepareTestAssets:LegacyTestAssets")
         {
             ToolPath = env.LegacyDotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
+            Verbosity = DotNetCoreVerbosity.Minimal
         });
+
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.LegacyDotNetCommand,
-            WorkingDirectory = folder,
+            WorkingDirectory = folder
         });
     });
 
@@ -855,6 +847,13 @@ Task("ExecuteRunScript")
 });
 
 /// <summary>
+///  Quick build.
+/// </summary>
+Task("Quick")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("Publish");
+
+/// <summary>
 ///  Clean install path.
 /// </summary>
 Task("CleanupInstall")
@@ -862,13 +861,6 @@ Task("CleanupInstall")
 {
     DirectoryHelper.ForceCreate(installFolder);
 });
-
-/// <summary>
-///  Quick build.
-/// </summary>
-Task("Quick")
-    .IsDependentOn("Cleanup")
-    .IsDependentOn("Publish");
 
 /// <summary>
 ///  Quick build + install.
@@ -919,6 +911,12 @@ Task("All")
 /// </summary>
 Task("Default")
     .IsDependentOn("All");
+
+Teardown(context =>
+{
+    // Ensure that we shutdown all build servers used by the CLI during build.
+    Run(env.DotNetCommand, "build-server shutdown");
+});
 
 /// <summary>
 ///  Default to All.

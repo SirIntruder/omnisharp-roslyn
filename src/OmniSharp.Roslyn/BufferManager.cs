@@ -161,6 +161,12 @@ namespace OmniSharp.Roslyn
 
         private IEnumerable<Project> FindProjectsByFileName(string fileName)
         {
+            var unityProject = UnityProjectHelper.GetProjectForFilePath(_workspace.CurrentSolution.Projects, fileName);
+            if (unityProject != null)
+            {
+                return new [] { unityProject };
+            }
+
             var fileInfo = new FileInfo(fileName);
             var dirInfo = fileInfo.Directory;
             var candidates = _workspace.CurrentSolution.Projects
@@ -173,10 +179,6 @@ namespace OmniSharp.Roslyn
             {
                 if (candidates.TryGetValue(dirInfo.FullName, out projects))
                 {
-                    FilterOut(projects, "Assembly-CSharp-Editor");
-                    FilterOut(projects, "Assembly-CSharp");
-                    FilterOut(projects, "Assembly-CSharp-Editor-firstpass");
-                    FilterOut(projects, "Assembly-CSharp-firstpass");
                     return projects;
                 }
 
@@ -184,11 +186,6 @@ namespace OmniSharp.Roslyn
             }
 
             return Array.Empty<Project>();
-        }
-
-        private void FilterOut(List<Project> projects, string projectName)
-        {
-            if (projects.Exists(p => p.Name == projectName)) { projects.RemoveAll(p => p.Name != projectName); }
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs args)

@@ -1,6 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.3] - 2018-08-28
+* Added support for files without a project. (PR: [#1252](https://github.com/OmniSharp/omnisharp-roslyn/pull/1252))
+* Fixed a bug where `*.rsp`-based scripting references where not exposed in the Workspace information endpoint (PR: [#1272](https://github.com/OmniSharp/omnisharp-roslyn/pull/1272))
+
 ## [1.32.2] - 2018-08-07
 * OmniSharp now targets **net461**, instead of **net46** (PR: [#1237](https://github.com/OmniSharp/omnisharp-roslyn/pull/1237))
 * Added new `/codestructure` endpoint which serves a replacement for the `/currentfilemembersastree` endpoint. The new endpoint has a cleaner design, properly supports all C# types and members, and supports more information, such as accessibility, static vs. instance, etc. (PRs: [#1211](https://github.com/OmniSharp/omnisharp-roslyn/pull/1211) [#1217](https://github.com/OmniSharp/omnisharp-roslyn/pull/1217))

@@ -309,7 +309,7 @@ namespace OmniSharp.Tests
 }
 ";
 
-            Assert.Equal(output.Trim(), json);
+            Assert.Equal(output.Trim(), json, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -332,7 +332,7 @@ namespace OmniSharp.Tests
 }
 ".Trim();
 
-            Assert.Equal(output, json);
+            Assert.Equal(output, json, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -406,7 +406,7 @@ namespace OmniSharp.Tests
 }
 ";
 
-            Assert.Equal(output.Trim(), json);
+            Assert.Equal(output.Trim(), json, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -436,7 +436,7 @@ namespace OmniSharp.Tests
 }
 ";
 
-            Assert.Equal(output.Trim(), json);
+            Assert.Equal(output.Trim(), json, ignoreLineEndingDifferences: true);
         }
     }
 }

@@ -23,7 +23,11 @@ public static class UnityProjectHelper
 		{
 			var isFirstPass = IsFirstPass(filePath);
 			var isEditor = IsEditor(filePath);
-			if (isFirstPass && isEditor) 
+			if (!filePath.StartsWith("Assets"))
+			{
+				return Array.Empty<string>();
+			}
+			if (isFirstPass && isEditor)
 			{
 				return new [] { AssemblyCSharpEditorFirstpass, AssemblyCSharpFirstpass, AssemblyCSharpEditor, AssemblyCSharp };
 			}

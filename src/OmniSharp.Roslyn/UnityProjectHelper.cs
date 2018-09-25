@@ -44,13 +44,13 @@ public static class UnityProjectHelper
 
 	public static bool IsFirstPass(string filePath)
 	{
-		return filePath.StartsWith("Assets/Plugins", StringComparison.Ordinal) ||
-			filePath.StartsWith("Assets/Standard Assets", StringComparison.Ordinal) ||
-			filePath.StartsWith("Assets/Pro Standard Assets", StringComparison.Ordinal);
+		return filePath.Contains("Assets/Plugins") || filePath.Contains("Assets\\Plugins") ||
+			filePath.Contains("Assets/Standard Assets") || filePath.Contains("Assets\\Standard Assets") ||
+			filePath.Contains("Assets/Pro Standard Assets") || filePath.Contains("Assets\\Pro Standard Assets");
 	}
 
 	public static bool IsEditor(string filePath)
 	{
-		return filePath.Contains("/Editor/");
+		return filePath.Contains("/Editor/") || filePath.Contains("\\Editor\\");
 	}
 }

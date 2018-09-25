@@ -182,12 +182,6 @@ namespace OmniSharp.Roslyn
 
         private IEnumerable<Project> FindProjectsByFileName(string fileName)
         {
-            var unityProject = UnityProjectHelper.GetProjectForFilePath(_workspace.CurrentSolution.Projects, fileName);
-            if (unityProject != null)
-            {
-                return new [] { unityProject };
-            }
-
             var fileInfo = new FileInfo(fileName);
             var dirInfo = fileInfo.Directory;
             var candidates = _workspace.CurrentSolution.Projects
@@ -200,6 +194,13 @@ namespace OmniSharp.Roslyn
             {
                 if (candidates.TryGetValue(dirInfo.FullName, out projects))
                 {
+                    // check if found projects match Unity3D standard projects - if so, emulate Unity's algorithm.
+                    var unityProject = UnityProjectHelper.GetProjectForFilePath(projects, fileName);
+                    if (unityProject != null)
+                    {
+                        return new [] { unityProject };
+                    }
+
                     return projects;
                 }
 

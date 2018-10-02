@@ -229,21 +229,29 @@ namespace OmniSharp.Roslyn
 
             lock (_lock)
             {
-                if (_transientDocumentIds.Contains(args.DocumentId))
-                {
-                    return;
-                }
+                bool replacedWithRealDocument =
+                    args.Kind == WorkspaceChangeKind.DocumentAdded && !_transientDocumentIds.Contains(args.DocumentId);
+                bool transientFileDeleted =
+                    args.Kind == WorkspaceChangeKind.DocumentRemoved;
 
-                if (!_transientDocuments.TryGetValue(fileName, out var documentIds))
+                if (replacedWithRealDocument || transientFileDeleted)
                 {
-                    return;
-                }
+                    if (!_transientDocuments.TryGetValue(fileName, out var documentIds))
+                    {
+                        return;
+                    }
 
-                _transientDocuments.Remove(fileName);
-                foreach (var documentId in documentIds)
-                {
-                    _workspace.RemoveDocument(documentId);
-                    _transientDocumentIds.Remove(documentId);
+                    _transientDocuments.Remove(fileName);
+                    foreach (var documentId in documentIds)
+                    {
+                        _transientDocumentIds.Remove(documentId);
+
+                        if (replacedWithRealDocument)
+                        {
+                            // in other cases, workspace will remove document automatically.
+                            _workspace.RemoveDocument(documentId);
+                        }
+                    }
                 }
             }
         }

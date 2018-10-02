@@ -231,10 +231,10 @@ namespace OmniSharp.Roslyn
             {
                 bool replacedWithRealDocument =
                     args.Kind == WorkspaceChangeKind.DocumentAdded && !_transientDocumentIds.Contains(args.DocumentId);
-                bool transientFileDeleted =
+                bool documentRemoved =
                     args.Kind == WorkspaceChangeKind.DocumentRemoved;
 
-                if (replacedWithRealDocument || transientFileDeleted)
+                if (replacedWithRealDocument || documentRemoved)
                 {
                     if (!_transientDocuments.TryGetValue(fileName, out var documentIds))
                     {
@@ -246,9 +246,9 @@ namespace OmniSharp.Roslyn
                     {
                         _transientDocumentIds.Remove(documentId);
 
-                        if (replacedWithRealDocument)
+                        // remove transient document from workspace if not already.
+                        if (!documentRemoved)
                         {
-                            // in other cases, workspace will remove document automatically.
                             _workspace.RemoveDocument(documentId);
                         }
                     }

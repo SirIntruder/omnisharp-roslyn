@@ -19,7 +19,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         protected override string EndpointName => OmniSharpEndpoints.FilesChanged;
 
         [Fact]
-        public async Task TestFileAddedToMSBuildWorkspaceOnCreation()
+        public async Task TestFileAddedToMSBuildWorkspaceOnCreationAndRemovedOnDeletion()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
             using (var host = CreateOmniSharpHost(testProject.Directory))

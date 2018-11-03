@@ -6,10 +6,8 @@ namespace OmniSharp.Helpers
 {
     internal static class QuickFixExtensions
     {
-        internal static void AddRange(this ICollection<QuickFix> quickFixes, IEnumerable<ISymbol> symbols, OmniSharpWorkspace workspace)
+        internal static void Add(this ICollection<QuickFix> quickFixes, ISymbol symbol, OmniSharpWorkspace workspace)
         {
-            foreach (var symbol in symbols)
-            {
                 quickFixes.Add(symbol, workspace);
             }
         }
@@ -28,6 +26,17 @@ namespace OmniSharp.Helpers
             {
                 var quickFix = location.GetQuickFix(workspace);
                 quickFixes.Add(quickFix);
+            }
+        }
+
+        internal static void AddRange(this ICollection<QuickFix> quickFixes, IEnumerable<ISymbol> symbols, OmniSharpWorkspace workspace)
+        {
+            foreach (var symbol in symbols)
+            {
+                foreach (var location in symbol.Locations)
+                {
+                    quickFixes.Add(location, workspace);
+                }
             }
         }
     }

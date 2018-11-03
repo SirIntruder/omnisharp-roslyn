@@ -8,12 +8,6 @@ namespace OmniSharp.Helpers
     {
         internal static void Add(this ICollection<QuickFix> quickFixes, ISymbol symbol, OmniSharpWorkspace workspace)
         {
-                quickFixes.Add(symbol, workspace);
-            }
-        }
-
-        internal static void Add(this ICollection<QuickFix> quickFixes, ISymbol symbol, OmniSharpWorkspace workspace)
-        {
             foreach (var location in symbol.Locations)
             {
                 quickFixes.Add(location, workspace);

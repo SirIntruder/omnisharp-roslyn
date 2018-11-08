@@ -25,21 +25,34 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             var quickFixes = await requestHandler.Handle(new CodeCheckRequest() { FileName = "a.cs" });
 
-            Assert.Single(quickFixes.QuickFixes);
+            Assert.Contains(quickFixes.QuickFixes.Select(x => x.ToString()), x => x.Contains("CS0029"));
             Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
         }
 
         [Fact]
         public async Task CheckAllFiles()
         {
+            var handler = GetRequestHandler(SharedOmniSharpTestHost);
+
             SharedOmniSharpTestHost.AddFilesToWorkspace(
                 new TestFile("a.cs", "class C1 { int n = true; }"),
                 new TestFile("b.cs", "class C2 { int n = true; }"));
 
-            var handler = GetRequestHandler(SharedOmniSharpTestHost);
             var quickFixes = await handler.Handle(new CodeCheckRequest());
+            Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
+            Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "b.cs");
+        }
 
-            Assert.Equal(2, quickFixes.QuickFixes.Count());
+        [Fact]
+        public async Task AnalysisSupportBuiltInIDEAnalysers()
+        {
+            var handler = GetRequestHandler(SharedOmniSharpTestHost);
+
+            SharedOmniSharpTestHost.AddFilesToWorkspace(
+                new TestFile("a.cs", "class C1 { int n = true; }"));
+
+            var quickFixes = await handler.Handle(new CodeCheckRequest());
+            Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("IDE0040"));
         }
     }
 }

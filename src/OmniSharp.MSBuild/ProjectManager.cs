@@ -17,6 +17,8 @@ using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -47,17 +49,30 @@ namespace OmniSharp.MSBuild
         private readonly HashSet<string> _failedToLoadProjectFiles;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly CachingCodeFixProviderForProjects _codeFixesForProject;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
-
         private const int LoopDelay = 100; // milliseconds
         private readonly BufferBlock<ProjectToUpdate> _queue;
         private readonly CancellationTokenSource _processLoopCancellation;
         private readonly Task _processLoopTask;
+        private readonly IAnalyzerAssemblyLoader _assemblyLoader;
         private bool _processingQueue;
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
+        private readonly RulesetsForProjects _rulesetsForProjects;
 
-        public ProjectManager(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IFileSystemWatcher fileSystemWatcher, MetadataFileReferenceCache metadataFileReferenceCache, PackageDependencyChecker packageDependencyChecker, ProjectLoader projectLoader, OmniSharpWorkspace workspace, ImmutableArray<IMSBuildEventSink> eventSinks)
+        public ProjectManager(
+            ILoggerFactory loggerFactory,
+            IEventEmitter eventEmitter,
+            IFileSystemWatcher fileSystemWatcher,
+            MetadataFileReferenceCache metadataFileReferenceCache,
+            PackageDependencyChecker packageDependencyChecker,
+            ProjectLoader projectLoader,
+            OmniSharpWorkspace workspace,
+            CachingCodeFixProviderForProjects codeFixesForProject,
+            RulesetsForProjects rulesetsForProjects,
+            IAnalyzerAssemblyLoader assemblyLoader,
+            ImmutableArray<IMSBuildEventSink> eventSinks)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
             _eventEmitter = eventEmitter;
@@ -68,13 +83,14 @@ namespace OmniSharp.MSBuild
             _failedToLoadProjectFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _projectLoader = projectLoader;
             _workspace = workspace;
+            _codeFixesForProject = codeFixesForProject;
             _eventSinks = eventSinks;
-
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
-
+            _assemblyLoader = assemblyLoader;
             _onDirectoryFileChanged = OnDirectoryFileChanged;
+            _rulesetsForProjects = rulesetsForProjects;
         }
 
         protected override void DisposeCore(bool disposing)
@@ -288,7 +304,13 @@ namespace OmniSharp.MSBuild
 
             _projectFiles.Add(projectFileInfo);
 
-            var projectInfo = projectFileInfo.CreateProjectInfo();
+            var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
+
+            _codeFixesForProject.LoadFrom(projectInfo);
+
+            if(projectFileInfo.RuleSet != null)
+                _rulesetsForProjects.AddOrUpdateRuleset(projectFileInfo.Id, projectFileInfo.RuleSet);
+
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
 
             if (!_workspace.TryApplyChanges(newSolution))

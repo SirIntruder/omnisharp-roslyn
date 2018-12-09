@@ -75,6 +75,7 @@ namespace OmniSharp.MSBuild
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
 
             _onDirectoryFileChanged = OnDirectoryFileChanged;
+            _fileSystemWatcher.Watch("*", _onDirectoryFileChanged);
         }
 
         protected override void DisposeCore(bool disposing)
@@ -367,8 +368,6 @@ namespace OmniSharp.MSBuild
             // Add source files to the project.
             foreach (var sourceFile in sourceFiles)
             {
-                _fileSystemWatcher.Watch(Path.GetDirectoryName(sourceFile), _onDirectoryFileChanged);
-
                 // If a document for this source file already exists in the project, carry on.
                 if (currentDocuments.Remove(sourceFile))
                 {
@@ -393,8 +392,41 @@ namespace OmniSharp.MSBuild
 
         private void OnDirectoryFileChanged(string path, FileChangeType changeType)
         {
+            var extension = Path.GetExtension(path);
+
             // Hosts may not have passed through a file change type
             if (changeType == FileChangeType.Unspecified && !File.Exists(path) || changeType == FileChangeType.Delete)
+            {
+                if (string.Equals(extension, ".cs", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    OnCSharpFileDeleted();
+                }
+                else if (string.IsNullOrEmpty(extension))
+                {
+                    OnDirectoryDeleted();
+                }
+            }
+
+            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create)
+            {
+                if (string.Equals(Path.GetExtension(path), ".cs", StringComparison.CurrentCultureIgnoreCase) && File.Exists(path))
+                {
+                    OnCSharpFileAdded();
+                }
+                else if (string.IsNullOrEmpty(extension) && Directory.Exists(path))
+                {
+                    OnDirectoryAdded();
+                }
+            }
+
+            void OnCSharpFileAdded()
+            {
+                // Use the buffer manager to add the new file to the appropriate projects
+                // Hosts that don't pass the FileChangeType may wind up updating the buffer twice
+                _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }).Wait();
+            }
+
+            void OnCSharpFileDeleted()
             {
                 foreach (var documentId in _workspace.CurrentSolution.GetDocumentIdsWithFilePath(path))
                 {
@@ -402,14 +434,22 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create)
+            void OnDirectoryAdded()
             {
-                // Only add cs files. Also, make sure the path is a file, and not a directory name that happens to end in ".cs"
-                if (string.Equals(Path.GetExtension(path), ".cs", StringComparison.CurrentCultureIgnoreCase) && File.Exists(path))
+                foreach (var file in Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories))
                 {
-                    // Use the buffer manager to add the new file to the appropriate projects
-                    // Hosts that don't pass the FileChangeType may wind up updating the buffer twice
-                    _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }).Wait();
+                    _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = file, FromDisk = true }).Wait();
+                }
+            }
+
+            void OnDirectoryDeleted()
+            {
+                foreach (var document in _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents))
+                {
+                    if (document.FilePath.StartsWith(path))
+                    {
+                        _workspace.RemoveDocument(document.Id);
+                    }
                 }
             }
         }

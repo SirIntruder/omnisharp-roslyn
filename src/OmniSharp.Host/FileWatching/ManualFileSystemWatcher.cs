@@ -35,6 +35,11 @@ namespace OmniSharp.FileWatching
                 {
                     extensionCallbacks.Invoke(filePath, changeType);
                 }
+
+                if (_callbacksMap.TryGetValue("*", out var wildcardCallbacks))
+                {
+                    wildcardCallbacks.Invoke(filePath, changeType);
+                }
             }
         }
 

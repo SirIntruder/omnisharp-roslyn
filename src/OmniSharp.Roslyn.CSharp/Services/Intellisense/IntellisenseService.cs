@@ -39,10 +39,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
                 var service = CompletionService.GetService(document);
-                var completionList = await service.GetCompletionsAsync(document, position);
 
-                if (completionList != null)
-                {
+                var completionList = await service.GetCompletionsAsync(document, position);
+                if (completionList == null) { continue; }
+
                     // Only trigger on space if Roslyn has object creation items
                     if (request.TriggerCharacter == " " && !completionList.Items.Any(i => i.IsObjectCreationCompletionItem()))
                     {
@@ -63,34 +63,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                             var symbols = await item.GetCompletionSymbolsAsync(recommendedSymbols, document);
                             if (symbols.Any())
                             {
-                                foreach (var symbol in symbols)
-                                {
-                                    if (item.UseDisplayTextAsCompletionText())
-                                    {
-                                        completionText = item.DisplayText;
-                                    }
-                                    else if (item.TryGetInsertionText(out var insertionText))
-                                    {
-                                        completionText = insertionText;
-                                    }
-                                    else
-                                    {
-                                        completionText = symbol.Name;
-                                    }
-
-                                    if (symbol != null)
+                            foreach (var symbol in symbols.Where(s => s != null))
                                     {
                                         if (request.WantSnippet)
                                         {
-                                            foreach (var completion in MakeSnippetedResponses(request, symbol, completionText, preselect, isSuggestionMode))
+                                    foreach (var completion in MakeSnippetedResponses(request, symbol, item.DisplayText, preselect, isSuggestionMode))
                                             {
                                                 completions.Add(completion);
                                             }
                                         }
                                         else
                                         {
-                                            completions.Add(MakeAutoCompleteResponse(request, symbol, completionText, preselect, isSuggestionMode));
-                                        }
+                                    completions.Add(MakeAutoCompleteResponse(request, symbol, item.DisplayText, preselect, isSuggestionMode));
                                     }
                                 }
 
@@ -116,7 +100,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                         }
                     }
                 }
-            }
 
             return completions
                 .OrderByDescending(c => c.CompletionText.IsValidCompletionStartsWithExactCase(wordToComplete))

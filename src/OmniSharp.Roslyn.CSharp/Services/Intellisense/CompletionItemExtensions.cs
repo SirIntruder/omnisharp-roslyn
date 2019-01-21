@@ -66,11 +66,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             return Enumerable.Empty<ISymbol>();
         }
 
-        public static bool UseDisplayTextAsCompletionText(this CompletionItem completionItem)
-        {
-            return completionItem.Properties.TryGetValue(Provider, out var provider)
-                && (provider == NamedParameterCompletionProvider || provider == OverrideCompletionProvider || provider == ParitalMethodCompletionProvider);
-        }
 
         public static bool TryGetInsertionText(this CompletionItem completionItem, out string insertionText)
         {

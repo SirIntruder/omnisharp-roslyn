@@ -61,13 +61,13 @@ namespace OmniSharp.MSBuild
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
 
-        public ProjectManager(ILoggerFactory loggerFactory, 
-            MSBuildOptions options, 
-            IEventEmitter eventEmitter, 
-            IFileSystemWatcher fileSystemWatcher, 
-            MetadataFileReferenceCache metadataFileReferenceCache, 
-            PackageDependencyChecker packageDependencyChecker, 
-            ProjectLoader projectLoader, 
+        public ProjectManager(ILoggerFactory loggerFactory,
+            MSBuildOptions options,
+            IEventEmitter eventEmitter,
+            IFileSystemWatcher fileSystemWatcher,
+            MetadataFileReferenceCache metadataFileReferenceCache,
+            PackageDependencyChecker packageDependencyChecker,
+            ProjectLoader projectLoader,
             OmniSharpWorkspace workspace,
             ImmutableArray<IMSBuildEventSink> eventSinks)
         {
@@ -124,7 +124,7 @@ namespace OmniSharp.MSBuild
 
                 projectDir = Path.GetDirectoryName(projectDir);
             } while(projectDir != null);
-            
+
             // Wait for all queued projects to load to ensure that workspace is fully up to date before this method completes.
             // If the project for the document was loaded before and there are no other projects to load at the moment, the call below will be no-op.
             _logger.LogTrace($"Started waiting for projects queue to be empty when requested '{documentPath}'");
@@ -461,7 +461,7 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create)
+            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create || changeType == FileChangeType.Change)
             {
                 if (string.Equals(Path.GetExtension(path), ".cs", StringComparison.CurrentCultureIgnoreCase) && File.Exists(path))
                 {

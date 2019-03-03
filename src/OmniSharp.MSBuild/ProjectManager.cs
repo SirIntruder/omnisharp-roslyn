@@ -276,6 +276,8 @@ namespace OmniSharp.MSBuild
             {
                 _processingQueue = false;
             }
+
+            _fileSystemWatcher.Watch(".cs", _onDirectoryFileChanged);
         }
 
         private (ProjectFileInfo, ProjectLoadedEventArgs) LoadProject(string projectFilePath)

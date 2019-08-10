@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -224,6 +225,36 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(6, project.SourceFiles.Count);
                 Assert.Contains(project.SourceFiles, fileName => fileName.EndsWith("GrammarParser.cs"));
             }    
+        }
+
+        [Fact]
+        public async Task ProjectWithWildcardPackageReference()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithWildcardPackageReference"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+                Assert.NotNull(workspaceInfo.Projects);
+                var project = Assert.Single(workspaceInfo.Projects);
+
+                Assert.Equal("ProjectWithWildcardPackageReference.csproj", Path.GetFileName(project.Path));
+                Assert.Equal(3, project.SourceFiles.Count);
+            }
+        }
+
+        [Fact]
+        public async Task DoesntParticipateInWorkspaceInfoResponseWhenDisabled()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
+            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: new Dictionary<string, string>
+            {
+                ["msbuild:enabled"] = "false"
+            }))
+            {
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+                Assert.Null(workspaceInfo);
+            }
         }
     }
 }

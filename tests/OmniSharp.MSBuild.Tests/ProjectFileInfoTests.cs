@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -57,8 +58,12 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("obj/Debug/netcoreapp2.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal(LanguageVersion.CSharp7_1, projectFileInfo.LanguageVersion);
+                Assert.True(projectFileInfo.TreatWarningsAsErrors);
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
+
+                var compilationOptions = projectFileInfo.CreateCompilationOptions();
+                Assert.Equal(ReportDiagnostic.Error, compilationOptions.GeneralDiagnosticOption);
             }
         }
 
@@ -120,11 +125,14 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("netcoreapp2.1", targetFramework);
+                Assert.Equal("netcoreapp3.0", targetFramework);
                 Assert.Equal(LanguageVersion.CSharp8, projectFileInfo.LanguageVersion);
                 Assert.Equal(NullableContextOptions.Enable, projectFileInfo.NullableContextOptions);
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
+
+                var compilationOptions = projectFileInfo.CreateCompilationOptions();
+                Assert.Equal(NullableContextOptions.Enable, compilationOptions.NullableContextOptions);
             }
         }
 
@@ -145,6 +153,22 @@ namespace OmniSharp.MSBuild.Tests
                 var libpath = string.Format($"{Path.Combine(testProject.Directory, "ExternAlias.App")}{Path.DirectorySeparatorChar}../ExternAlias.Lib/bin/Debug/netstandard2.0/ExternAlias.Lib.dll");
                 Assert.True(projectFileInfo.ReferenceAliases.ContainsKey(libpath));
                 Assert.Equal("abc", projectFileInfo.ReferenceAliases[libpath]);
+            }
+        }
+
+        [Fact]
+        public async Task AllowUnsafe()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("AllowUnsafe"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "AllowUnsafe.csproj");
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+                Assert.True(projectFileInfo.AllowUnsafeCode);
+
+                var compilationOptions = projectFileInfo.CreateCompilationOptions();
+                Assert.True(compilationOptions.AllowUnsafe);
+                Assert.Equal(ReportDiagnostic.Default, compilationOptions.GeneralDiagnosticOption);
             }
         }
     }

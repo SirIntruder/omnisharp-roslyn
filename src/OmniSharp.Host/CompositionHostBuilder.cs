@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
+using OmniSharp.Host.Services;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
@@ -125,7 +126,7 @@ namespace OmniSharp
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IAssemblyLoader, AssemblyLoader>();
-            services.AddSingleton<IAnalyzerAssemblyLoader, AssemblyLoader>();
+            services.AddSingleton<IAnalyzerAssemblyLoader, AnalyzerAssemblyLoader>();
             services.AddOptions();
 
             services.AddSingleton<IDotNetCliService, DotNetCliService>();
@@ -134,7 +135,9 @@ namespace OmniSharp
             services.AddSingleton<IMSBuildLocator>(sp =>
                 MSBuildLocator.CreateDefault(
                     loggerFactory: sp.GetService<ILoggerFactory>(),
-                    assemblyLoader: sp.GetService<IAssemblyLoader>()));
+                    assemblyLoader: sp.GetService<IAssemblyLoader>(),
+                    msbuildConfiguration: configuration.GetSection("msbuild")));
+
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(configuration);

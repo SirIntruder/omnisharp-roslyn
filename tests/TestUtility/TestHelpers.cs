@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
@@ -58,20 +60,13 @@ namespace TestUtility
                     language: LanguageNames.CSharp,
                     filePath: filePath,
                     metadataReferences: references,
-                    analyzerReferences: analyzerRefs);
+                    analyzerReferences: analyzerRefs).WithDefaultNamespace("OmniSharpTest");
 
                 workspace.AddProject(projectInfo);
 
                 foreach (var testFile in testFiles)
                 {
-                    var documentInfo = DocumentInfo.Create(
-                        id: DocumentId.CreateNewId(projectInfo.Id),
-                        name: testFile.FileName,
-                        sourceCodeKind: SourceCodeKind.Regular,
-                        loader: TextLoader.From(TextAndVersion.Create(testFile.Content.Text, versionStamp)),
-                        filePath: testFile.FileName);
-
-                    workspace.AddDocument(documentInfo);
+                    workspace.AddDocument(projectInfo.Id, testFile.FileName, TextLoader.From(TextAndVersion.Create(testFile.Content.Text, versionStamp)), SourceCodeKind.Regular);
                 }
 
                 projectsIds.Add(projectInfo.Id);
@@ -121,7 +116,7 @@ namespace TestUtility
 
         public static Dictionary<string, string> GetConfigurationDataWithAnalyzerConfig(bool roslynAnalyzersEnabled = false, Dictionary<string, string> existingConfiguration = null)
         {
-            if(existingConfiguration == null)
+            if (existingConfiguration == null)
             {
                 return new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } };
             }
@@ -130,7 +125,25 @@ namespace TestUtility
             copyOfExistingConfigs.Add("RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString());
 
             return copyOfExistingConfigs;
+        }
 
+        public static async Task WaitUntil(Func<Task<bool>> condition, int frequency = 25, int timeout = -1)
+        {
+            var waitTask = Task.Run(async () =>
+            {
+                while (!await condition()) await Task.Delay(frequency);
+            });
+
+            if (waitTask != await Task.WhenAny(waitTask,
+                    Task.Delay(timeout)))
+                throw new TimeoutException();
+        }
+
+        public static void SetDefaultCulture()
+        {
+            CultureInfo ci = new CultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentCulture = ci;
+            CultureInfo.DefaultThreadCurrentUICulture = ci;
         }
     }
 }

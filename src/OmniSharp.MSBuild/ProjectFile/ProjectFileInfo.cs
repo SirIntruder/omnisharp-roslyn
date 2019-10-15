@@ -37,6 +37,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public LanguageVersion LanguageVersion => _data.LanguageVersion;
         public NullableContextOptions NullableContextOptions => _data.NullableContextOptions;
         public bool AllowUnsafeCode => _data.AllowUnsafeCode;
+        public bool CheckForOverflowUnderflow => _data.CheckForOverflowUnderflow;
         public string DocumentationFile => _data.DocumentationFile;
         public ImmutableArray<string> PreprocessorSymbolNames => _data.PreprocessorSymbolNames;
         public ImmutableArray<string> SuppressedDiagnosticIds => _data.SuppressedDiagnosticIds;
@@ -50,7 +51,10 @@ namespace OmniSharp.MSBuild.ProjectFile
         public ImmutableArray<string> ProjectReferences => _data.ProjectReferences;
         public ImmutableArray<PackageReference> PackageReferences => _data.PackageReferences;
         public ImmutableArray<string> Analyzers => _data.Analyzers;
+        public ImmutableArray<string> AdditionalFiles => _data.AdditionalFiles;
         public ImmutableDictionary<string, string> ReferenceAliases => _data.ReferenceAliases;
+        public bool TreatWarningsAsErrors => _data.TreatWarningsAsErrors;
+        public string DefaultNamespace => _data.DefaultNamespace;
 
         public ProjectIdInfo ProjectIdInfo { get; }
 

@@ -1,6 +1,108 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.34.6] - not yet released
+* Raised minimum Mono version to 6.4.0 to provide better .NET Core 3.0 support ([#1629](https://github.com/OmniSharp/omnisharp-roslyn/pull/1629))
+* Fixed a concurrency bug in scripting/Cake support ([#1627](https://github.com/OmniSharp/omnisharp-roslyn/pull/1627))
+* Correctly respect request cancellation token in metadata service ([#1631](https://github.com/OmniSharp/omnisharp-roslyn/pull/1631))
+
+## [1.34.5] - 2019-10-08
+* Fixed 1.34.4 regression that caused "go to metadata" to not work ([#1624](https://github.com/OmniSharp/omnisharp-roslyn/issues/1624), PR: [#1625](https://github.com/OmniSharp/omnisharp-roslyn/pull/1625))
+* Updated the Dotnet.Script.DependencyModel and Dotnet.Script.DependencyModel.NuGet packages to version 0.50.0 adding support for .NET Core 3.0 based scripts (PR: [#1609](https://github.com/OmniSharp/omnisharp-roslyn/pull/1609))
+
+## [1.34.4] - 2019-09-30
+* Upgraded to MSBuild 16.3 and Mono MSBuild 16.3 (from Mono 6.4.0) to support .NET Core 3.0 RTM (PR: [#1616](https://github.com/OmniSharp/omnisharp-roslyn/pull/1616), [#1612](https://github.com/OmniSharp/omnisharp-roslyn/pull/1612), [#1606](https://github.com/OmniSharp/omnisharp-roslyn/pull/1606))
+* Fixed behavior when there are multiple handlers are defined for a language for a given request (PR: [#1582](https://github.com/OmniSharp/omnisharp-roslyn/pull/1582))
+
+## [1.34.3] - 2019-09-11
+* Added support for `CheckForOverflowUnderflow ` in csproj files (PR: [#1587](https://github.com/OmniSharp/omnisharp-roslyn/pull/1587))
+* Updated LSP libraries to 0.13 which fixes problems with clients not supporting dynamic registrations. ([#1505](https://github.com/OmniSharp/omnisharp-roslyn/issues/1505), [#1525](https://github.com/OmniSharp/omnisharp-roslyn/issues/1525), PR: [#1562](https://github.com/OmniSharp/omnisharp-roslyn/pull/1562))
+* Update to Roslyn `3.4.0-beta1-19460-02` to align with the upcoming .NET Core 3.1 preview 1 (PR:[#1597](https://github.com/OmniSharp/omnisharp-roslyn/pull/1597))
+ 
+## [1.34.2] - 2019-08-16 
+* Update to Roslyn `3.3.0-beta2-19401-05` which fixes a 1.34.1 regression resulting in StackOverflowException on code analysis of partial classes (PR: [#1579](https://github.com/OmniSharp/omnisharp-roslyn/pull/1579))
+* Added support for reading C# 8.0 `Nullable` setting from csproj files (and dropped support for `NullableContextOptions` - based on the LDM decision to [rename the MSBuild property](https://github.com/dotnet/roslyn/issues/35432) ([#1573](https://github.com/OmniSharp/omnisharp-roslyn/pull/1573))
+
+## [1.34.1] - 2019-07-31
+* Added support for "sync namespace" refactoring ([#1475](https://github.com/OmniSharp/omnisharp-roslyn/issues/1475), PR: [#1563](https://github.com/OmniSharp/omnisharp-roslyn/pull/1563))
+* Fixed a regression introduced in 1.32.20 which caused `AllowUnsafeCode` in csproj to also enable `TreatWarningsAsErrors` behavior ([#1565](https://github.com/OmniSharp/omnisharp-roslyn/issues/1565), PR: [#1567](https://github.com/OmniSharp/omnisharp-roslyn/pull/1567))
+* Update to Roslyn `3.3.0-beta2-19376-02` (PR: [#1563](https://github.com/OmniSharp/omnisharp-roslyn/pull/1563))
+* Fixed a timeout issue in large analyzer bundles (i.e. FxCop analyzers) ([#1552](https://github.com/OmniSharp/omnisharp-roslyn/issues/1552), PR: [#1566](https://github.com/OmniSharp/omnisharp-roslyn/pull/1566))
+
+## [1.34.0] - 2019-07-15
+* Added support for Roslyn code actions that normally need UI - they used to be explicitly sipped by OmniSharp, now it surfaces them with predefined defaults instead. ([#1220](https://github.com/OmniSharp/omnisharp-roslyn/issues/1220), PR: [#1406](https://github.com/OmniSharp/omnisharp-roslyn/pull/1406)) These are:
+  * extract interface
+  * generate constructor
+  * generate overrides
+  * generate *Equals* and *GetHashCode*
+* Improved analyzers performance by introducing background analysis support ([#1507](https://github.com/OmniSharp/omnisharp-roslyn/pull/1507))
+* According to [official Microsoft .NET Core support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core), .NET Core 1.0 and 1.1 (`project.json`-based .NET Core flavors) have reached end of life and went out of support on 27 June 2019. OmniSharp features to support that, which have been obsolete and disabled by default since version 1.32.2 (2018-08-07), are now completely removed.
+* Fixed a bug where some internal services didn't respect the disabling of a project system ([#1543](https://github.com/OmniSharp/omnisharp-roslyn/pull/1543))
+* Improved the MSBuild selection logic. The standalone instance inside OmniSharp is now preferred over VS2017, with VS2019 given the highest priority. This ensures that .NET Core 3.0 works correctly. It is also possible manually provide an MSBuild path using OmniSharp configuration, which is then always selected. ([#1541](https://github.com/OmniSharp/omnisharp-roslyn/issues/1541), PR: [#1545](https://github.com/OmniSharp/omnisharp-roslyn/pull/1545))
+    ```JSON
+        {
+            "MSBuild": {
+                "MSBuildOverride": {
+                    "MSBuildPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\MSBuild\\15.0\\Bin",
+                    "Name": "vs2017 msbuild"
+                }
+            }
+        }
+    ```
+* Added support for *AdditionalFiles* in csproj files ([#1510](https://github.com/OmniSharp/omnisharp-roslyn/issues/1510), PR: [#1547](https://github.com/OmniSharp/omnisharp-roslyn/pull/1547))
+* Fixed a bug in *.editorconfig* where formatting settings were not correctly passed into external code fixes ([#1558](https://github.com/OmniSharp/omnisharp-roslyn/issues/1558), PR: [#1559](https://github.com/OmniSharp/omnisharp-roslyn/pull/1559))
+
+## [1.33.0] - 2019-07-01
+* Added support for `.editorconfig` files to control formatting settings, analyzers, coding styles and naming conventions. The feature is currently opt-into and needs to be enabled using OmniSharp configuration ([#31](https://github.com/OmniSharp/omnisharp-roslyn/issues/31), PR: [#1526](https://github.com/OmniSharp/omnisharp-roslyn/pull/1526))
+    ```JSON
+        {
+            "FormattingOptions": {
+                "EnableEditorConfigSupport": true
+            }
+        }
+    ```
+* Analyzers improvements (PR: [#1440](https://github.com/OmniSharp/omnisharp-roslyn/pull/1440)) 
+	* Dynamically loaded / modifiable rulesets instead without full restart on omnisharp after every change
+	* Reanalyze updated projects
+	* Built-int Roslyn diagnostics can be controlled by rulesets even when analyzers are not enabled
+	* Faster analysis since project isn't updated every time
+	* When project is restored it is re-analyzed with correct dependencies
+* Added support for various renaming options - renaming any symbol can now propagate to comments or strings, and renaming a method symbol can also rename its overloads. They can be set via OmniSharp configuration, such as `omnisharp.json` file (they are disabled by default). (PR: [#1495](https://github.com/OmniSharp/omnisharp-roslyn/pull/1495))
+    ```JSON
+    {
+        "RenameOptions": {
+            "RenameInComments": true,
+            "RenameOverloads": true,
+            "RenameInStrings": true
+        }
+    }
+    ```
+* Fixed a regression on declaration name completion (PR: [#1520](https://github.com/OmniSharp/omnisharp-roslyn/pull/1520))
+* Update to Roslyn `3.2.0-beta4-19326-12` (PR: [#1534](https://github.com/OmniSharp/omnisharp-roslyn/pull/1534))
+* Added snippets support in LSP mode (PR: [#1422](https://github.com/OmniSharp/omnisharp-roslyn/pull/1422))
+* Fixed renaming in LSP mode (PR: [#1423](https://github.com/OmniSharp/omnisharp-roslyn/pull/1423))
+
+## [1.32.20] - 2019-06-03
+* Added support for `TreatWarningsAsErrors` in csproj files (PR: [#1459](https://github.com/OmniSharp/omnisharp-roslyn/pull/1459))
+* Updated to Roslyn `3.2.0-beta3-19281-01` to match VS dev16.2p2 (PR: [#1511](https://github.com/OmniSharp/omnisharp-roslyn/pull/1511))
+* Updated to `OmniSharp.Extensions.LanguageServer` 0.12.1 ([#1403](https://github.com/OmniSharp/omnisharp-roslyn/issues/1403), PR: [#1503](https://github.com/OmniSharp/omnisharp-roslyn/pull/1503))
+* Fixed assembly redirects when shadow copying analyzers ([#1496](https://github.com/OmniSharp/omnisharp-roslyn/issues/1496), PR: [#1497](https://github.com/OmniSharp/omnisharp-roslyn/pull/1497))
+* Fixed a logical bug in symbol completion (PR: [#1491](https://github.com/OmniSharp/omnisharp-roslyn/pull/1491))
+* Added support for `preview` and `latestmajor` C# language versions ([#1487](https://github.com/OmniSharp/omnisharp-roslyn/issues/1487), PR: [#1488](https://github.com/OmniSharp/omnisharp-roslyn/pull/1488))
+
+## [1.32.19] - 2019-05-01
+* Updated to Roslyn `3.1.0-beta4-19251-02` (PR: [#1479](https://github.com/OmniSharp/omnisharp-roslyn/pull/1479))
+* Shadow copy Roslyn analyzers in order to not lock them ([#1465](https://github.com/OmniSharp/omnisharp-roslyn/issues/1465), PR: [#1474](https://github.com/OmniSharp/omnisharp-roslyn/pull/1474))
+* Fixed logging output for OmniSharp HTTP server ([#1466](https://github.com/OmniSharp/omnisharp-roslyn/issues/1446), PR: [#1456](https://github.com/OmniSharp/omnisharp-roslyn/pull/1456))
+* Fixed OmniSharp hanging on wildcard Nuget package references ([omnisharp-vscode#3009](https://github.com/OmniSharp/omnisharp-vscode/issues/3009), PR: [#1473](https://github.com/OmniSharp/omnisharp-roslyn/pull/1473))
+* OmniSharp now uses correct 4.7.2 framework sku to prompt for installation of .NET 4.7.2 if missing ([#1468](https://github.com/OmniSharp/omnisharp-roslyn/issues/1468), PR: [#1469](https://github.com/OmniSharp/omnisharp-roslyn/pull/1469))
+
+## [1.32.18] - 2019-04-12
+* Renamed `ProjectGuid` to `ProjectId` and no longer hash target framework names on `ProjectConfigurationMessage` (PR: [#1454](https://github.com/OmniSharp/omnisharp-roslyn/pull/1454))
+
+## [1.32.17] - 2019-04-12
+* Fixed a bug in embedded MSBuild 16 path detection (PR: [#1457](https://github.com/OmniSharp/omnisharp-roslyn/pull/1457))
+
 ## [1.32.16] - 2019-04-10
 * .NET Core 3.0 support (PR: [#1450](https://github.com/OmniSharp/omnisharp-roslyn/pull/1450))
 * Upgraded to Roslyn `3.1.0-beta2-19205-01` (PR: [#1448](https://github.com/OmniSharp/omnisharp-roslyn/pull/1448))
@@ -44,7 +146,7 @@ All changes to the project will be documented in this file.
 * Fixed MSBuild discovery path (1.32.7 regression) (PR: [#1337](https://github.com/OmniSharp/omnisharp-roslyn/pull/1337))
 
 ## [1.32.7] - 2018-11-12
-* It's now possible to override the default location of OmniSharp's global folder (%USERPROFILE%\.omnisharp or ~/.omnisharp.) with an OMNISHARPHOME environment variable (PR: [#1317](https://github.com/OmniSharp/omnisharp-roslyn/pull/1317)) 
+* It's now possible to override the default location of OmniSharp's global folder (%USERPROFILE%\.omnisharp or ~/.omnisharp.) with an OMNISHARPHOME environment variable (PR: [#1317](https://github.com/OmniSharp/omnisharp-roslyn/pull/1317))
 * OmniSharp no longer searches for `config.json` in its source directory to load configuration (PR: [#1319](https://github.com/OmniSharp/omnisharp-roslyn/pull/1319))
 * Fixed a regression introduced in 1.32.4, that prevented find symbol endpoint from working for CSX projects (PR: [#1321](https://github.com/OmniSharp/omnisharp-roslyn/pull/1321))
 * Improved MSBuild discovery for future scenarios (PR: [#1328](https://github.com/OmniSharp/omnisharp-roslyn/pull/1328))

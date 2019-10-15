@@ -22,16 +22,13 @@ namespace OmniSharp.Script
     public class ScriptProjectSystem : IProjectSystem
     {
         private const string CsxExtension = ".csx";
-
         private readonly ConcurrentDictionary<string, ProjectInfo> _projects = new ConcurrentDictionary<string, ProjectInfo>();
         private readonly ScriptContextProvider _scriptContextProvider;
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
         private readonly IFileSystemWatcher _fileSystemWatcher;
-        private readonly ILoggerFactory _loggerFactory;
         private readonly FileSystemHelper _fileSystemHelper;
-
         private ScriptOptions _scriptOptions;
         private Lazy<ScriptContext> _scriptContext;
 
@@ -41,7 +38,6 @@ namespace OmniSharp.Script
         {
             _workspace = workspace;
             _env = env;
-            _loggerFactory = loggerFactory;
             _fileSystemWatcher = fileSystemWatcher;
             _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
@@ -52,21 +48,27 @@ namespace OmniSharp.Script
         public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { CsxExtension };
         public bool EnabledByDefault { get; } = true;
+        public bool Initialized { get; private set; }
 
         public void Initalize(IConfiguration configuration)
         {
-            _scriptOptions = new ScriptOptions();
-            ConfigurationBinder.Bind(configuration, _scriptOptions);
+            if (Initialized) return;
 
-            _scriptContext = new Lazy<ScriptContext>(() => _scriptContextProvider.CreateScriptContext(_scriptOptions));
+            _scriptOptions = new ScriptOptions();
+
+            ConfigurationBinder.Bind(configuration, _scriptOptions);
 
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
             var allCsxFiles = _fileSystemHelper.GetFiles("**/*.csx").ToArray();
+
+            _scriptContext = new Lazy<ScriptContext>(() => _scriptContextProvider.CreateScriptContext(_scriptOptions, allCsxFiles));
+
             if (allCsxFiles.Length == 0)
             {
                 _logger.LogInformation("Could not find any CSX files");
+                Initialized = true;
 
                 // Watch CSX files in order to add/remove them in workspace
                 _fileSystemWatcher.Watch(CsxExtension, OnCsxFileChanged);
@@ -75,7 +77,7 @@ namespace OmniSharp.Script
 
             _logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
-            // Each .CSX file becomes an entry point for it's own project
+            // Each .CSX file becomes an entry point for its own project
             // Every #loaded file will be part of the project too
             foreach (var csxPath in allCsxFiles)
             {
@@ -84,6 +86,8 @@ namespace OmniSharp.Script
 
             // Watch CSX files in order to add/remove them in workspace
             _fileSystemWatcher.Watch(CsxExtension, OnCsxFileChanged);
+
+            Initialized = true;
         }
 
         private void OnCsxFileChanged(string filePath, FileChangeType changeType)
@@ -108,14 +112,14 @@ namespace OmniSharp.Script
                 var csxFileName = Path.GetFileName(csxPath);
                 var project = _scriptContext.Value.ScriptProjectProvider.CreateProject(csxFileName, _scriptContext.Value.MetadataReferences, csxPath, _scriptContext.Value.GlobalsType);
 
-                    if (_scriptOptions.IsNugetEnabled())
-                    {
-                        var scriptMap = _scriptContext.Value.CompilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
-                        var options = project.CompilationOptions.WithSourceReferenceResolver(
-                            new NuGetSourceReferenceResolver(ScriptSourceResolver.Default,
-                                scriptMap));
-                        project = project.WithCompilationOptions(options);
-                    }
+                if (_scriptOptions.IsNugetEnabled())
+                {
+                    var scriptMap = _scriptContext.Value.CompilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
+                    var options = project.CompilationOptions.WithSourceReferenceResolver(
+                        new NuGetSourceReferenceResolver(ScriptSourceResolver.Default,
+                            scriptMap));
+                    project = project.WithCompilationOptions(options);
+                }
 
                 // add CSX project to workspace
                 _workspace.AddProject(project);

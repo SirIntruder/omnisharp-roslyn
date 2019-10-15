@@ -23,7 +23,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
             // Don't try to resolve to MSBuild assemblies under the installed Mono path unless OmniSharp
             // is actually running on the installed Mono runtime. The problem is that, when running standalone
-            // on its own embedded Mono runtime, OmniSharp carries it's own "GAC" of dependencies.
+            // on its own embedded Mono runtime, OmniSharp carries its own "GAC" of dependencies.
             // And, loading Microsoft.Build.* assemblies from the installed Mono location might have different
             // dependencies that aren't included in OmniSharp's GAC. This can result in strange failures during
             // design-time build that are difficult to diagnose. However, if OmniSharp is actually running on the
@@ -69,9 +69,9 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            if (monoVersion < new Version("5.2.0"))
+            if (monoVersion < new Version("6.4.0"))
             {
-                Logger.LogDebug($"Found Mono MSBuild but it could not be used because it is version {monoVersion} and in needs to be >= 5.2.0");
+                Logger.LogDebug($"Found Mono MSBuild but it could not be used because it is version {monoVersion} and in needs to be >= 6.4.0");
                 return NoInstances;
             }
 
@@ -91,7 +91,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
                 if (Platform.Current.OperatingSystem == Utilities.OperatingSystem.Linux)
                 {
-                    Logger.LogWarning(@"It looks like you have Mono 5.2.0 or greater installed but MSBuild could not be found.
+                    Logger.LogWarning(@"It looks like you have Mono 6.4.0 or greater installed but MSBuild could not be found.
 Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable better MSBuild support.");
                 }
 
@@ -112,7 +112,7 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
                 new MSBuildInstance(
                     nameof(DiscoveryType.Mono),
                     toolsPath,
-                    new Version(15, 0),
+                    new Version(16, 3),
                     DiscoveryType.Mono,
                     propertyOverrides.ToImmutable()));
         }

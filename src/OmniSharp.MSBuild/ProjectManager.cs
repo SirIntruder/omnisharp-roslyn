@@ -98,7 +98,10 @@ namespace OmniSharp.MSBuild
             _analyzerAssemblyLoader = analyzerAssemblyLoader;
             _onDirectoryFileChanged = OnDirectoryFileChanged;
             _fileSystemWatcher.Watch("*", _onDirectoryFileChanged);
+<<<<<<< HEAD
             _rulesetsForProjects = rulesetsForProjects;
+=======
+>>>>>>> 5ff94d049fb2d3be0822294739653acb24c2a670
 
             if (_options.LoadProjectsOnDemand)
             {
@@ -565,7 +568,6 @@ namespace OmniSharp.MSBuild
             }
 
             void OnDirectoryAdded()
-            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create || changeType == FileChangeType.Change)
             {
                 foreach (var file in Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories))
                 {

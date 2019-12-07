@@ -1,6 +1,15 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.34.9] - not yet released
+* Line pragma is now respected in find references ([#1649](https://github.com/OmniSharp/omnisharp-roslyn/issues/1649), PR:[#1660](https://github.com/OmniSharp/omnisharp-roslyn/pull/1660))
+* Do not set mono paths when running in standalone mode ([omnisharp-vscode#3410](https://github.com/OmniSharp/omnisharp-vscode/issues/3410), [omnisharp-vscode#3340](https://github.com/OmniSharp/omnisharp-vscode/issues/3340), [#1650](https://github.com/OmniSharp/omnisharp-roslyn/issues/1650), PR:[#1656](https://github.com/OmniSharp/omnisharp-roslyn/pull/1656))
+* Fixed a bug where OmniSharp would crash on startup if the path contained `=` sign ([omnisharp-vscode#3436](https://github.com/OmniSharp/omnisharp-vscode/issues/3436), PR:[#1661](https://github.com/OmniSharp/omnisharp-roslyn/pull/1661))
+
+## [1.34.8] - 2019-11-21
+* Update to Roslyn `3.5.0-beta1-19571-01` (PR:[#1653](https://github.com/OmniSharp/omnisharp-roslyn/pull/1653))
+* Support plugins configuration in omnisharp.json (PR:[#1615](https://github.com/OmniSharp/omnisharp-roslyn/pull/1615))
+
 ## [1.34.7] - 2019-11-06
 * Updated the embedded Mono to 6.4.0 (PR:[#1640](https://github.com/OmniSharp/omnisharp-roslyn/pull/1640))
 * Update to Roslyn `3.4.0-beta3-19551-02` to align with the upcoming .NET Core 3.1 Preview 3 (PR:[#1644](https://github.com/OmniSharp/omnisharp-roslyn/pull/1644))

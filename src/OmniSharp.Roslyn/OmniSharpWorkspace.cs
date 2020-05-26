@@ -350,7 +350,10 @@ namespace OmniSharp
                 return false;
             }
 
-            if (documentExclusionRulesPerProject.TryGetValue(project.Id, out Predicate<string> isExcluded) && isExcluded(fileName))
+            // fileName needs to be checked against any ProjectSystem defined rules (e.g. MSBuild DefaultItemExcludes)
+            // for workspace to allow the newly found documents to be added to the project.
+            if (documentExclusionRulesPerProject.TryGetValue(project.Id, out Predicate<string> documentExclusionFilter)
+                && documentExclusionFilter(fileName))
             {
                 return false;
             }

@@ -77,14 +77,5 @@ namespace OmniSharp.MSBuild.ProjectFile
                 }
             }
         }
-
-        public ProjectFileInfo TryGetItemByFile(string filePath)
-        {
-            var key = FileSystemHelper.FindParentPath(filePath, _itemMap.Keys);
-
-            return key == null
-                ? null
-                : _itemMap[key];
-        }
     }
 }

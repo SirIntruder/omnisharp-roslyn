@@ -29,14 +29,17 @@ namespace OmniSharp
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
-        private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
-
-        private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
+        private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers;
+        private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos;
+        private readonly ConcurrentDictionary<ProjectId, Predicate<string>> documentExclusionRulesPerProject;
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
             : base(aggregator.CreateHostServices(), "Custom")
         {
+            _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
+            miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
+            documentExclusionRulesPerProject = new ConcurrentDictionary<ProjectId, Predicate<string>>();
             BufferManager = new BufferManager(this, fileSystemWatcher);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
         }
@@ -73,6 +76,11 @@ namespace OmniSharp
         public void AddProject(ProjectInfo projectInfo)
         {
             OnProjectAdded(projectInfo);
+        }
+
+        public void AddDocumentExclusionRuleForProject(ProjectId projectId, Predicate<string> documentPathFilter)
+        {
+            documentExclusionRulesPerProject[projectId] = documentPathFilter;
         }
 
         public void AddProjectReference(ProjectId projectId, ProjectReference projectReference)
@@ -222,7 +230,7 @@ namespace OmniSharp
             // folder computation is best effort. in case of exceptions, we back out because it's not essential for core features
             try
             {
-                // find the relative path from project file to our document 
+                // find the relative path from project file to our document
                 var relativeDocumentPath = FileSystemHelper.GetRelativePath(fullPath, basePath);
 
                 // only set document's folders if
@@ -316,6 +324,11 @@ namespace OmniSharp
         {
             if (string.IsNullOrWhiteSpace(project.FilePath) ||
                 string.IsNullOrWhiteSpace(fileName))
+            {
+                return false;
+            }
+
+            if (documentExclusionRulesPerProject.TryGetValue(project.Id, out Predicate<string> isExcluded) && isExcluded(fileName))
             {
                 return false;
             }

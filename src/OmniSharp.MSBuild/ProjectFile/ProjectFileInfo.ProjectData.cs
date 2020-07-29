@@ -107,7 +107,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 string defaultNamespace,
                 bool runAnalyzers,
                 bool runAnalyzersDuringLiveAnalysis,
-                RuleSet ruleset)
+                RuleSet ruleset,
+                ImmutableArray<IMSBuildGlob> fileInclusionGlobs)
                 : this()
             {
                 Guid = guid;
@@ -143,6 +144,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 RunAnalyzers = runAnalyzers;
                 RunAnalyzersDuringLiveAnalysis = runAnalyzersDuringLiveAnalysis;
+                FileInclusionGlobs = fileInclusionGlobs;
             }
 
             private ProjectData(
@@ -181,7 +183,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<IMSBuildGlob> fileInclusionGlobs)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                       configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
-                      documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset)
+                      documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset, fileInclusionGlobs)
             {
                 SourceFiles = sourceFiles.EmptyIfDefault();
                 ProjectReferences = projectReferences.EmptyIfDefault();
@@ -192,7 +194,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                 AnalyzerConfigFiles = analyzerConfigFiles.EmptyIfDefault();
                 ReferenceAliases = referenceAliases;
                 ProjectReferenceAliases = projectReferenceAliases;
-                FileInclusionGlobs = fileInclusionGlobs;
             }
 
             public static ProjectData Create(MSB.Evaluation.Project project)
@@ -233,11 +234,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var treatWarningsAsErrors = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.TreatWarningsAsErrors), defaultValue: false);
                 var runAnalyzers = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.RunAnalyzers), defaultValue: true);
                 var runAnalyzersDuringLiveAnalysis = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.RunAnalyzersDuringLiveAnalysis), defaultValue: true);
+                var includeGlobs = project.GetAllGlobs().Select(x => x.MsBuildGlob).ToImmutableArray();
 
                 return new ProjectData(
                     guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                     configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
-                    documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset: null);
+                    documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset: null, includeGlobs);
             }
 
             public static ProjectData Create(MSB.Execution.ProjectInstance projectInstance, MSB.Evaluation.Project project)
